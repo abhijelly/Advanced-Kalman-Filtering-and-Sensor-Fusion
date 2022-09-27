@@ -13,7 +13,7 @@
 // YOU CAN USE AND MODIFY THESE CONSTANTS HERE
 constexpr bool INIT_ON_FIRST_PREDICTION = true;
 constexpr double INIT_POS_STD = 0;
-constexpr double INIT_VEL_STD = 0;
+constexpr double INIT_VEL_STD = 3.536;
 constexpr double ACCEL_STD = 0;
 constexpr double GPS_POS_STD = 3.0;
 // -------------------------------------------------- //
@@ -33,6 +33,8 @@ void KalmanFilter::predictionStep(double dt)
             VectorXd state = Vector4d::Zero();
             MatrixXd cov = Matrix4d::Zero();
 
+            state << INIT_POS_STD , INIT_POS_STD, INIT_VEL_STD, INIT_VEL_STD;
+
             // Assume the initial position is (X,Y) = (0,0) m
             // Assume the initial velocity is 5 m/s at 45 degrees (VX,VY) = (5*cos(45deg),5*sin(45deg)) m/s
 
@@ -51,8 +53,25 @@ void KalmanFilter::predictionStep(double dt)
         // Hint: You can use the constants: ACCEL_STD
         // ----------------------------------------------------------------------- //
         // ENTER YOUR CODE HERE
+        MatrixXd F = Matrix4d::Zero();        
+        MatrixXd Q = Matrix2d::Zero();
+        MatrixXd L = MatrixXd(4,2);
 
-
+        F << 0, 0, dt, 0,
+             0, 0, 0, dt,
+             0, 0, 1, 0,
+             0, 0, 0, 1;
+                    
+        Q << pow(ACCEL_STD, 2.0), 0,
+             0, pow(ACCEL_STD, 2.0);
+        
+        L << 0.5*dt*dt, 0,
+             0, 0.5*dt*dt,
+             dt, 0,
+             0, dt;
+        
+        state = F * state;
+        cov = F * cov * F.transpose() + L * Q * L.transpose(); 
         // ----------------------------------------------------------------------- //
 
         setState(state);
